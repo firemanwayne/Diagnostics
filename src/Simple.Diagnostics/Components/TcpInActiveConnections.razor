@@ -1,0 +1,64 @@
+﻿@implements IDisposable
+
+@code {
+
+    [Parameter] public string Title { get; set; }
+
+    [Inject] ITcpMonitor Monitor { get; set; }
+
+    protected override void OnInitialized()
+    {
+        try
+        {
+            Monitor.OnConnectionAdded += (o, a) => { InvokeAsync(() => StateHasChanged()); };
+            Monitor.OnConnectionUpdated += (o, a) => { InvokeAsync(() => StateHasChanged()); };
+            Monitor.OnConnectionRemoved += (o, a) => { InvokeAsync(() => StateHasChanged()); };            
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+        }
+    }
+
+    public void Dispose()
+    {
+        if (Monitor != null)
+        {
+            Monitor.OnConnectionAdded -= (o, a) => { };
+            Monitor.OnConnectionUpdated -= (o, a) => { };
+            Monitor.OnConnectionRemoved -= (o, a) => { };
+        }
+    }
+}
+
+<a class="card-link" data-toggle="collapse" href="#collapseThree">
+    <h5>@Title @Monitor.InActiveConnections</h5>
+</a>
+
+<div id="collapseThree" class="collapse show">
+    <div class="container" style="max-height:600px;overflow-y:auto">
+        <table class="table table-bordered table-hover table-sm">
+            <thead class="thead-dark">
+                <tr class="text-center">
+                    <th class="border">Index</th>
+                    <th class="border">Last Updated</th>
+                    <th class="border">Local Port</th>
+                    <th class="border">Remote Port</th>
+                    <th class="border">State</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Monitor.GetInActiveConnections())
+                {
+                    <tr>
+                        <td class="text-center border">@item.Index</td>
+                        <td class="text-center border">@item.LastUpdated.ToString("MM/dd/yyyy HH:mm:ss")</td>
+                        <td class="text-center border">@item.LocalPort</td>
+                        <td class="text-center border">@item.RemotePort</td>
+                        <td class="text-center border">@item.State</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
